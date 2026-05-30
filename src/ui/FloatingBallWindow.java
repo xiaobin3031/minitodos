@@ -12,7 +12,6 @@ public class FloatingBallWindow extends JWindow {
     private final static int RADIUS = 60;
     private final static Font LEFT_IMPORT_FONT = new Font(Font.SANS_SERIF, Font.BOLD, 30);
     private final Timer hideTimer;
-    private JFrame detailFrame;
 
     public FloatingBallWindow() {
         this.build();
@@ -66,9 +65,11 @@ public class FloatingBallWindow extends JWindow {
 
     private void showDetail(BallPanel ballPanel) {
         MainWindow mainWindow = MainWindow.getInstance();
-        mainWindow.setDeadlineLevel(ballPanel.getCurrentLevel());
-        mainWindow.refreshTodos();
-        mainWindow.setVisible(true);
+        if(!mainWindow.isVisible()) {
+            mainWindow.setDeadlineLevel(ballPanel.getCurrentLevel());
+            mainWindow.refreshTodos();
+            mainWindow.setVisible(true);
+        }
     }
 
     private static class BallPanel extends JPanel {

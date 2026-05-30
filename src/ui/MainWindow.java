@@ -5,13 +5,20 @@ import model.TodoItem;
 import service.TodoService;
 
 import javax.swing.*;
+import javax.swing.event.TableModelEvent;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import java.awt.*;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.function.BiConsumer;
 
 public class MainWindow extends JFrame {
+
+    private static final int idIdx = 0;
+    private static final int contentIdx = 1;
+    private static final int dateIdx = 2;
 
     private static MainWindow instance;
     private JComboBox<SpinnerKV<Integer>> levelComboBox;
@@ -63,15 +70,37 @@ public class MainWindow extends JFrame {
         this.add(titlePanel, BorderLayout.NORTH);
 
         {
-            DefaultTableModel model = new DefaultTableModel();
-            model.addColumn("内容");
-            model.addColumn("截止时间");
+            DefaultTableModel model = getDefaultTableModel();
             this.todoTable = new JTable(model);
+            TableColumn idColumn = this.todoTable.getColumnModel().getColumn(0);
+            idColumn.setMinWidth(0);
+            idColumn.setMaxWidth(0);
+            idColumn.setWidth(0);
+            idColumn.setPreferredWidth(0);
             this.todoTable.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
             JScrollPane tablePanel = new JScrollPane(this.todoTable);
             this.refreshTodos();
             this.add(tablePanel, BorderLayout.CENTER);
         }
+    }
+
+    private DefaultTableModel getDefaultTableModel() {
+        DefaultTableModel model = new DefaultTableModel();
+        model.addColumn("ID");
+        model.addColumn("内容");
+        model.addColumn("截止时间");
+        model.addTableModelListener(e -> {
+            if (e.getType() == TableModelEvent.UPDATE) {
+                int row = e.getFirstRow();
+                TodoItem updateItem = new TodoItem(
+                        (String) model.getValueAt(row, idIdx),
+                        (String) model.getValueAt(row, contentIdx),
+                        LocalDateTime.parse((String) model.getValueAt(row, dateIdx), DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
+                );
+                this.todoChangedConsumer.accept(updateItem, 2);
+            }
+        });
+        return model;
     }
 
     private JPanel getTitlePanel() {
@@ -139,10 +168,11 @@ public class MainWindow extends JFrame {
         DefaultTableModel model = (DefaultTableModel) this.todoTable.getModel();
         model.setRowCount(0);
         for (TodoItem todoItem : list) {
-            model.addRow(new Object[]{
-                    todoItem.content,
-                    todoItem.deadline.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))
-            });
+            Object[] dataRow = new Object[3];
+            dataRow[idIdx] = todoItem.id;
+            dataRow[contentIdx] = todoItem.content;
+            dataRow[dateIdx] = todoItem.deadline.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            model.addRow(dataRow);
         }
     }
 

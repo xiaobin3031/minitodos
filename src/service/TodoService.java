@@ -61,6 +61,16 @@ public class TodoService {
         return todos;
     }
 
+    public TodoItem findOneByLevel(int level) {
+        LocalDateTime now = LocalDateTime.now();
+        for (TodoItem todoItem : this.list()) {
+            if (DEADLINE_PREDICATE.get(level).test(todoItem, now)) {
+                return todoItem;
+            }
+        }
+        return null;
+    }
+
     public List<TodoItem> list(int level) {
         List<TodoItem> list = list();
         if (level > 0) {
